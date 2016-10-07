@@ -1,0 +1,110 @@
+@import play.api.Play.current
+
+<!DOCTYPE html>
+<html ng-app="project_upload">
+<head>
+    <title>Project view</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://code.angularjs.org/1.5.8/angular.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-animate.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.5.8/angular-route.js"></script>
+    <script src='@routes.Assets.versioned("javascripts/script.js")'></script>
+    <script src="@routes.Assets.versioned("javascripts/login.js")"></script>
+    <script src='@routes.Assets.versioned("javascripts/sonar.js")'></script>
+    <script src='@routes.Assets.versioned("javascripts/project.js")'></script>
+    <script type="text/javascript" charset="utf-8">
+        var sonarHost = "@current.configuration.getString("sonar.host")";
+        if(sessionStorage.getItem('sonar')) {
+            sonarHost = sessionStorage.getItem('sonar');
+        }
+    </script>
+    <link rel="stylesheet" type="text/css" href='@routes.Assets.versioned("stylesheets/style.css")'>
+</head>
+<body ng-controller="projectViewController">
+    <div id="header">
+            <!-- <a href="/"><img id="logo" src='@routes.Assets.versioned("images/sv.png")'/></a> -->
+    </div>
+    <div id="menu">
+        <ul>
+            <li><a href="/">Index</a></li>
+            <li><a href="/projects/upload">Upload</a></li>
+            <li><a href="/projects/report">Report</a></li>
+            <li><a href="/acp" ng-show="loggedIn">ACP</a></li>
+            <li id="logout-button" ng-show="loggedIn"><a href="/acp/logout">Logout</a></li>
+        </ul>
+    </div>
+    <div id="wrapper">
+        <div id="main">
+            <h2>Project details</h2>
+            <hr />
+            <div id="project_details">
+                <dl>
+                    <dt><strong>Project name</strong></dt>
+                    <dd>{{project.projectName}}</dd>
+                    <dt><strong>Author</strong></dt>
+                    <dd>{{project.name}}</dd>
+                    <dt><strong>Input date</strong></dt>
+                    <dd>{{project.inputDate | date:'dd/MM/yyyy - HH:mm:ss'}}</dd>
+                    <dt><strong>Sonar</strong></dt>
+                    <dd><select ng-model="selectedSonar" ng-change="updateSonar()" ng-options="item.id as item.address for item in sonarList">
+                    </select></dd>
+                    <dt><strong>Analyzed</strong></dt>
+                    <dd>{{project.analyzed ? "Yes" : "No"}}</dd>
+                </dl>
+                <div id="project_buttons">
+                    <button ng-show="project.analyzed" ng-click="getReport()">View results</button>
+                    <button ng-click="analyzeProject()">{{!project.analyzed ? "Start sonar analysis" : "Re-run sonar analysis"}}</button>
+                </div>
+            </div>
+            <div id="sonar_loading" loading>
+                <img src='@routes.Assets.versioned("images/loader.gif")' />
+            </div>
+            <div id="sonar_report" ng-if="showReport" class="fade">
+                <div id="sonar_results" ng-if="showResults">
+                    <p>Results</p>
+                    <hr/>
+                    <table class="sonar_table">
+                        <tr>
+                            <th>Metric</th>
+                            <th>Value</th>
+                        </tr>
+                        <tr ng-repeat="item in sonarResponse.msr">
+                            <td>{{ displayMetric(item.key) }}</td>
+                            <td>{{ item.val }}</td>
+                        </tr>
+                    </table>
+                </div>
+                <div id="sonar_custom_form" ng-if="showCustomForm">
+                    <div id="sonar_custom_select">
+                        <p>Select metrics</p>
+                        <hr />
+                        <select ng-model="selected.metrics" ng-options="item.key as item.name for item in metrics" multiple>
+                        </select>
+                        <button class="small-but" ng-click="getCustomReport()">Run query</button>
+                    </div>
+                    <div id="sonar_results_custom" ng-if="showCustomResults">
+                        <p>Results</p>
+                        <hr/>
+                        <table class="sonar_table">
+                            <tr>
+                                <th>Metric</th>
+                                <th>Value</th>
+                            </tr>
+                            <tr ng-repeat="item in sonarResponse.msr">
+                                <td>{{ displayMetric(item.key) }}</td>
+                                <td>{{ item.val }}</td>
+                            </tr>
+                        </table>
+                    </div>
+
+                </div>
+                <div id="sonar_custom">
+                    <button class="small-but" ng-show="!showCustomForm" ng-click="showCustomForm=true;showResults=false">Run custom query</button>
+                    <button class="small-but" ng-show="!showCustomForm" ng-click="goToSonar()">View in Sonar</button>
+                </div>
+            </div>
+        </div>
+        <div id="footer">Footer</div>
+    </div>
+</body>
+</html>
