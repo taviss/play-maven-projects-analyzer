@@ -1,0 +1,1 @@
+# play-maven-projects-analyzer
